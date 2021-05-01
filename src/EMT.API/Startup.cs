@@ -1,22 +1,16 @@
-using EMT.BLL;
-using EMT.BLL.Services;
-using EMT.Common;
-using EMT.DAL;
-using EMT.DAL.EF;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using EMT.BLL;
+using EMT.Common;
+using EMT.DAL;
+using EMT.DAL.EF;
 
 namespace EMT.API
 {
@@ -75,6 +69,19 @@ namespace EMT.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            // ------------------------------------------------------------------------------------
+            // Global Exception Handler
+            app.UseExceptionHandler(a => a.Run(async context =>
+            {
+                var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                var exception = exceptionHandlerPathFeature.Error;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    Error = exception.Message,
+                    ExceptionMessage = exception.ToString()
+                });
+            }));
 
             app.UseAuthorization();
 

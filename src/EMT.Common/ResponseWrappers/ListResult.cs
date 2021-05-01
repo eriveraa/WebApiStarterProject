@@ -10,10 +10,6 @@ namespace EMT.Common.ResponseWrappers
         public int TotalPages { get; set; }
         public new IEnumerable<T> Data { get; set; }
 
-        public ListResult(bool initialSuccess) : base(initialSuccess)
-        {
-        }
-
         public ListResult() : base()
         {
         }

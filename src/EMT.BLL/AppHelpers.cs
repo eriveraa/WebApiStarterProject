@@ -15,14 +15,6 @@ using EMT.Common.ResponseWrappers;
 
 namespace EMT.BLL
 {
-    public enum IdGenerationModeEnum
-    {
-        GENAPP_GUIDSTRING,
-        GENAPP_GUID,
-        GENUSER,
-        GENDB_IDENTITY
-    }
-
     public class AppHelpers
     {
         public const uint DefaulUserId = 1;
@@ -38,7 +30,7 @@ namespace EMT.BLL
 
         public static string QueryGetAll_Command(string tableName, string selectFields, string idPropertyName, string userInnerJoins, string notDeleted)
         {
-            return $@"SELECT {selectFields} FROM {tableName} T0 {userInnerJoins} WHERE ( {notDeleted} ) ORDER BY UpdatedAt;";
+            return $@"SELECT {selectFields} FROM {tableName} T0 {userInnerJoins} WHERE ( {notDeleted} ) ORDER BY UpdatedAt DESC;";
         }
 
         public static string QueryGetExists_Command(string tableName, string idPropertyName)
@@ -148,89 +140,5 @@ namespace EMT.BLL
                 return Convert.ToBase64String(encryptedBytes);
             }
         }
-
-        //public static string GetDefaultAppUserId()
-        //{
-        //    return ConfigurationManager.AppSettings["DefaultAppUserId"];
-        //}
-
-        //public static string GetUploadFolder()
-        //{
-        //    return ConfigurationManager.AppSettings["UploadFolder"];
-        //}
-
-        //public static string GetTemporalFolder()
-        //{
-        //    //return HttpContext.Current.Server.MapPath("~/temporalfiles/");
-        //    return ConfigurationManager.AppSettings["TempFolder"];
-        //}
-
-        //public static int GetDelay(IOptionsSnapshot<MyAppConfig> myAppConfig)
-        //{
-        //    return int.Parse(ConfigurationManager.AppSettings["RuntimeThreadAffinity"]);
-        //}
-
-        public static async Task<BaseResult<T>> GetObject<T>(IDbConnection cn,
-                                                             string sqlCommand,
-                                                             object commandParameters) where T : class
-        {
-            BaseResult<T> ret = new BaseResult<T>(true);  // Objeto para retornar datos
-
-            // Obtener la data
-            T retObject = await cn.QuerySingleOrDefaultAsync<T>(sqlCommand, commandParameters);
-            
-            // Datos de retorno
-            ret.Data = retObject;
-
-            // Devolver los datos
-            return ret;
-        }
-
-        public static async Task<ListResult<T>> GetList<T>(IDbConnection cn,
-                                                               string sqlCommand,
-                                                               object commandParameters) where T : class
-        {
-            ListResult<T> ret = new ListResult<T>(true);  // Objeto para retornar datos
-
-            // Obtener la data
-            IEnumerable<T> dataList = await cn.QueryAsync<T>(sqlCommand, commandParameters);
-
-            // Datos de retorno
-            ret.Data = dataList;
-            //ret.PageRecordCount = dataList.Count();
-            ret.Page = 1;
-            ret.PageSize = dataList.Count();
-            ret.TotalRecordCount = ret.PageSize;
-            ret.TotalPages = 1;
-
-            // Devolver los datos
-            return ret;
-        }
-
-        public static async Task<ListResult<T>> GetSPListData<T>(IDbConnection cn,
-                                                                     string sqlCommand,
-                                                                     object commandParameters = null) where T : class
-        {
-            ListResult<T> ret = new ListResult<T>(true);  // Objeto para retornar datos
-
-            // Obtener la data
-            IEnumerable<T> dataList = await cn.QueryAsync<T>(sqlCommand, commandParameters, commandType: System.Data.CommandType.StoredProcedure);
-
-            // Datos de retorno
-            ret.Data = dataList;
-            //ret.PageRecordCount = dataList.Count();
-            ret.Page = 1;
-            ret.PageSize = dataList.Count();
-            ret.TotalRecordCount = ret.PageSize;
-            ret.TotalPages = 1;
-
-            // Insertar un pequeño delay (para pruebas)
-            //await Task.Delay(myAppConfig.Value.TransactionMs);
-            //System.Threading.Thread.Sleep(EMT.BLL.Utils.GetDelay());
-
-            // Devolver los datos
-            return ret;
-        }
-
     }
 }

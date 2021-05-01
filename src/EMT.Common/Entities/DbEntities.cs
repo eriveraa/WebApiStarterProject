@@ -6,6 +6,7 @@ namespace EMT.Common.Entities
     // POCO Class for table: AppParameter	
     public class AppParameter : AuditableEntityBase
     {
+        [Key]
         [Required]
         public uint AppParameterId { get; set; } //  PK / int / 0 /  Not Nullable
         [Required]

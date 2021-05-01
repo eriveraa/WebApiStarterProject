@@ -23,7 +23,6 @@ namespace EMT.API.Controllers
         public async Task<IActionResult> Get(uint id)
         {
             var response = await _service.GetById(id);
-            if (!response.Success) return BadRequest(response);
             if (response.Data == null) return NotFound();
             return Ok(response);
         }
@@ -32,7 +31,6 @@ namespace EMT.API.Controllers
         public async Task<IActionResult> Get(string search = null, int page = 1, int pageSize = 5)
         {
             var response = await _service.GetSearchAndPaginated(search, page, pageSize);
-            if (!response.Success) return BadRequest(response);
             return Ok(response);
         }
 
@@ -40,7 +38,6 @@ namespace EMT.API.Controllers
         public async Task<IActionResult> Post([FromBody] MyNote newEntity)
         {
             var response = await _service.Create(newEntity);
-            if (!response.Success) return BadRequest(response);            
             return CreatedAtAction(nameof(Get), new { id = newEntity.NoteId }, response);
         }
 
@@ -48,11 +45,7 @@ namespace EMT.API.Controllers
         public async Task<IActionResult> Put(uint id, [FromBody] MyNote updatedEntity)
         {
             var response = await _service.Update(id, updatedEntity);
-            if (!response.Success) 
-                return BadRequest(response);
-            else if (response.Data == null) 
-                return NotFound();
-
+            if (response.Data == null) return NotFound();
             return Ok(response);
         }
 
@@ -60,10 +53,7 @@ namespace EMT.API.Controllers
         public async Task<IActionResult> Delete(uint id)
         {
             var response = await _service.DeleteById(id);
-            if (!response.Success) 
-                return BadRequest(response);
-            else if (response.Data == null) 
-                return NotFound();
+            if (response.Data == null) return NotFound();
             return NoContent();
         }
 

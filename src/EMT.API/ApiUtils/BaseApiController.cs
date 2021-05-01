@@ -1,9 +1,9 @@
 ﻿using System;
-using EMT.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using EMT.Common;
 
 namespace EMT.API.ApiUtils
 {
