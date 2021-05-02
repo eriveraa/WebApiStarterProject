@@ -20,7 +20,7 @@ namespace EMT.BLL.Services
             this._logger = logger;
             this._uow = uow;
             this._connection = _uow.GetConnection;
-            //logger.LogInformation($"* SERVICE Constructor of {this.GetType()} at {DateTime.Now}");
+            _logger.LogDebug($"*** SERVICE Constructor of {this.GetType()} at {DateTime.Now}");
         }
     }
 }

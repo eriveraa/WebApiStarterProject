@@ -26,10 +26,14 @@ namespace EMT.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            // ------------------------------------------------------------------------------------
             // Adding: Remove camelCasing on serializing
             services.AddControllers().AddJsonOptions(options =>
                 options.JsonSerializerOptions.PropertyNamingPolicy = null);
+
+            // ------------------------------------------------------------------------------------
+            // Adding: Required for add ClientInfo in Serilog
+            services.AddHttpContextAccessor();
 
             // ------------------------------------------------------------------------------------
             // ADDING SWAGGER
@@ -45,8 +49,7 @@ namespace EMT.API
             // ------------------------------------------------------------------------------------
             // DBCONTEXT DATABASE (Database for Entity Framework Core context)
             string dbConnectionString = Configuration.GetConnectionString("cs01");
-            services.AddDbContext<ApplicationDbContext>(opt => opt.UseMySql(dbConnectionString, ServerVersion.AutoDetect(dbConnectionString))
-                    .EnableSensitiveDataLogging(), ServiceLifetime.Scoped);
+            services.AddDbContext<ApplicationDbContext>(opt => opt.UseMySql(dbConnectionString, ServerVersion.AutoDetect(dbConnectionString)), ServiceLifetime.Scoped);
             //services.AddDbContext<ApplicationDbContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("cs01")), ServiceLifetime.Scoped);
             //services.AddDbContext<ApplicationDbContext>(opt => opt.UseInMemoryDatabase("MyPersonaInfoDb"));
 
