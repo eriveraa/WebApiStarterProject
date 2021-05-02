@@ -13,6 +13,7 @@ namespace EMT.BLL.Services
 {
     /// <summary>
     /// Service class for business logic, interacting with data, etc.
+    /// Use this service class as a template for new Services.
     /// </summary>
     public class MyNoteService : BaseService, IMyNoteService
     {
@@ -34,12 +35,15 @@ namespace EMT.BLL.Services
         public async Task<BaseResult<MyNoteDto>> GetById(object id)
         {
             var response = new BaseResult<MyNoteDto>();
-
+            
             response.Data = await _connection.QuerySingleOrDefaultAsync<MyNoteDto>(GetById_Command, new { id1 = id });
+            _logger.LogInformation("*** {Method} {id}", "GetById", id);
 
+            #region Other samples
             //EF query samples:
             //var note = await _uow.GetRepository<MyNote>().GetById(id);
             //var allUsers = (from p in _uow.GetContext.AppUser select p).ToList();
+            #endregion
 
             return response;
         }
@@ -49,6 +53,7 @@ namespace EMT.BLL.Services
             var response = new ListResult<MyNoteDto>();
 
             response.Data = await _connection.QueryAsync<MyNoteDto>(GetAll_Command, null);
+            _logger.LogInformation("*** {Method}", "GetAll");
 
             return response;
         }
@@ -74,6 +79,9 @@ namespace EMT.BLL.Services
             // Datos de retorno (esto llena el response.data)
             AppHelpers.SetListResponse<MyNoteDto>(response, data, page, pageSize, totalCount);
 
+            _logger.LogInformation("*** {Method}", "GetSearchAndPaginated");
+
+
             return response;
         }
 
@@ -92,6 +100,7 @@ namespace EMT.BLL.Services
             // Devolver la entidad recien guardada desde la BD
             response.Data = await _connection.QuerySingleOrDefaultAsync<MyNoteDto>(GetById_Command, new { id1 = newEntity.NoteId });
 
+            _logger.LogInformation("*** {Method} {@Entity}", "Create", newEntity);
             return response;
         }
 
@@ -125,9 +134,39 @@ namespace EMT.BLL.Services
             // Devolver la entidad recien guardada desde la BD
             response.Data = await _connection.QuerySingleOrDefaultAsync<MyNoteDto>(GetById_Command, new { id1 = id });
 
+            _logger.LogInformation("*** {Method} {@Entity}", "Update", updatedEntity);
             return response;
         }
 
+        public async Task<BaseResult<object>> DeleteById(object id)
+        {
+            var response = new BaseResult<object>();
+
+            // Obtener la entidad desde la BD para actualizarla
+            var entityFromDb = await _uow.GetRepository<MyNote>().GetById(id);
+
+            // Si la entidad ya está eliminada o no existe, no hacer nada y devolver null
+            if (entityFromDb == null || entityFromDb.IsDeleted)
+            {
+                response.Data = null;
+                return response;
+            }
+
+            // Actualizar propiedades de la entidad
+            AppHelpers.SetFieldsForEntityDeletion(entityFromDb);
+
+            // Guardar la entidad
+            await _uow.GetRepository<MyNote>().Update(entityFromDb);
+            await _uow.SaveAsync();
+
+            // Solo devolver el ID de la entidad eliminada lógicamente
+            response.Data = id;
+
+            _logger.LogInformation("*** {Method} {id}", "DeleteById", id);
+            return response;
+        }
+
+        #region Old Code for reference
         public async Task<BaseResult<MyNoteDto>> Update_OLD(object id, MyNote updatedEntity)
         {
             var response = new BaseResult<MyNoteDto>();
@@ -169,33 +208,6 @@ namespace EMT.BLL.Services
             }
             return response;
         }
-
-        public async Task<BaseResult<object>> DeleteById(object id)
-        {
-            var response = new BaseResult<object>();
-
-            // Obtener la entidad desde la BD para actualizarla
-            var entityFromDb = await _uow.GetRepository<MyNote>().GetById(id);
-
-            // Si la entidad ya está eliminada o no existe, no hacer nada y devolver null
-            if (entityFromDb == null || entityFromDb.IsDeleted)
-            {
-                response.Data = null;
-                return response;
-            }
-
-            // Actualizar propiedades de la entidad
-            AppHelpers.SetFieldsForEntityDeletion(entityFromDb);
-
-            // Guardar la entidad
-            await _uow.GetRepository<MyNote>().Update(entityFromDb);
-            await _uow.SaveAsync();
-
-            // Solo devolver el ID de la entidad eliminada lógicamente
-            response.Data = id;
-
-            return response;
-        }
-
+        #endregion
     }
 }
