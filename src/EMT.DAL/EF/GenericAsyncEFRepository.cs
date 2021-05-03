@@ -45,19 +45,19 @@ namespace EMT.DAL.EF
         public async Task Update(T entity)
         {
             // Method 1
-            _table.Update(entity);
+            //_table.Update(entity);
 
             // Method 2
             //_table.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
-
             //Debug.WriteLine($"* Entity Entry-State: {_context.Entry(entity).State}");
+
             return;
         }
 
         public async Task DeleteById(object id)
         {
-            T existing = _table.Find(id);
+            T existing = await _table.FindAsync(id);
             _table.Remove(existing);
             return;
         }

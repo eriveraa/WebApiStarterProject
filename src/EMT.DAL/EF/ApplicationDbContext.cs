@@ -22,13 +22,12 @@ namespace EMT.DAL.EF
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             // This will automatically put the timestamps in any Entity derived from AuditableEntityBase
+            var timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var entries = ChangeTracker.Entries().Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
             foreach (var entityEntry in entries)
             {
                 if (entityEntry.Entity is AuditableEntityBase auditableEntity)
                 {
-                    var timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
                     if (entityEntry.State == EntityState.Modified)
                     {
                         auditableEntity.UpdatedAt = timeStamp;
