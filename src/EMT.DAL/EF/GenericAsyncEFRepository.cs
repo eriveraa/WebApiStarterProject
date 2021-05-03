@@ -15,7 +15,7 @@ namespace EMT.DAL.EF
 
         public GenericAsyncEFRepository(ApplicationDbContext _context)
         {
-            Debug.WriteLine($"* Constructor of {this.GetType()} at {DateTime.Now}");
+            //Debug.WriteLine($"* Constructor of {this.GetType()} at {DateTime.Now}");
             this._context = _context;
             _table = _context.Set<T>();
         }
@@ -37,14 +37,21 @@ namespace EMT.DAL.EF
 
         public async Task Add(T entity)
         {            
-            await _table.AddAsync(entity);
+            //await _table.AddAsync(entity);  // Not required as is not suggested by Microsoft. Should keep using the non-async version.
+            _table.Add(entity);
             return;
         }
 
         public async Task Update(T entity)
         {
-            _table.Attach(entity);
+            // Method 1
+            _table.Update(entity);
+
+            // Method 2
+            //_table.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
+
+            //Debug.WriteLine($"* Entity Entry-State: {_context.Entry(entity).State}");
             return;
         }
 

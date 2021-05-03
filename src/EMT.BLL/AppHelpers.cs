@@ -50,24 +50,24 @@ namespace EMT.BLL
 
         public static long SetFieldsForEntityCreation<T>(T auditableEntity, uint userId = DefaulUserId, long timeStamp = 0) where T : AuditableEntityBase
         {
-            if (timeStamp == 0) timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            //if (timeStamp == 0) timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();  // Moved to DbContext
 
             // Establecer las propiedades de la creación de la entidad
             auditableEntity.CreatedBy = userId;
             auditableEntity.UpdatedBy = userId;
             auditableEntity.IsDeleted = false;
-            auditableEntity.CreatedAt = timeStamp;
-            auditableEntity.UpdatedAt = timeStamp;
+            //auditableEntity.CreatedAt = timeStamp;  // Moved to DbContext
+            //auditableEntity.UpdatedAt = timeStamp;  // Moved to DbContext
 
             return timeStamp;
         }
 
         public static long SetFieldsForEntityUpdate(AuditableEntityBase auditableEntity, uint userId = DefaulUserId, long timeStamp = 0)
         {
-            if (timeStamp == 0) timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            //if (timeStamp == 0) timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); // Moved to DbContext
 
             auditableEntity.UpdatedBy = userId;
-            auditableEntity.UpdatedAt = timeStamp;
+            //auditableEntity.UpdatedAt = timeStamp; // Moved to DbContext
 
             return timeStamp;
         }

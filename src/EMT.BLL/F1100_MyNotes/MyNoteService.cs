@@ -111,7 +111,7 @@ namespace EMT.BLL.Services
             // Detectar inconsistencia entre el Id y la entidad (deben ser iguales en valores)
             if ((uint)id != updatedEntity.NoteId) throw new Exception(AppMessages.UPDATE_ID_ERROR);
 
-            // Obtener la entidad desde la BD para actualizarla
+            // Obtener la entidad desde la BD para comparar con la recibida
             var entityFromDb = await _uow.GetRepository<MyNote>().GetById(id);
 
             // Si la entidad ya está eliminada o no existe, no hacer nada y devolver null

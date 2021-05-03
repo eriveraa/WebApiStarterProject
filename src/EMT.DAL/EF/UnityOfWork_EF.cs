@@ -17,7 +17,7 @@ namespace EMT.DAL.EF
 
         public UnityOfWork_EF(ApplicationDbContext _context)
         {
-            Debug.WriteLine($"* Constructor of {this.GetType()} at {DateTime.Now}");
+            //Debug.WriteLine($"* Constructor of {this.GetType()} at {DateTime.Now}");
             this._context = _context;
         }
 
