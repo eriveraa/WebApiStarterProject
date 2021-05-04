@@ -53,17 +53,19 @@ namespace EMT.BLL.Services
             string sqlPaged = $@"SELECT COUNT(*) FROM {_tableName} T0 WHERE {sqlWHERE};
 
                                 SELECT {_selectFields} FROM {_tableName} T0 {_userInnerJoins} WHERE {sqlWHERE} 
-                                ORDER BY T0.UpdatedAt DESC LIMIT @pageSize OFFSET @offset;";
-            
-            return await AppHelpers.ServiceGetSearchAndPaginated<MyNoteDto>(
-                            _connection, sqlPaged,
-                            new { search, pageSize, offset = pageSize * (page - 1) });
+                                ORDER BY T0.CreatedAt ASC LIMIT @pageSize OFFSET @offset;";
+
+            // Add here all the parameters you need (besides @pageSize and @offset)
+            DynamicParameters dapperParameters = new();
+            dapperParameters.AddDynamicParams(new { search });
+
+            return await AppHelpers.ServiceGetSearchAndPaginated<MyNoteDto>(_connection, sqlPaged, dapperParameters, page, pageSize);
         }
 
         public async Task<BaseResult<MyNoteDto>> Create(MyNote newEntity)
         {
             _logger.LogInformation("*** {Method} {@Entity}", "Create", newEntity);
-            // Agregar verificación de la existencia de la entidad con el Id, solo si el usuario lo provee.
+            // Agregar verificación de la existencia de la entidad con el Id, solo si el usuario lo provee. (utilizar ServiceEntityExists)
             return await AppHelpers.ServiceCreateEntityHelper<MyNote, MyNoteDto, uint>(
                             newEntity, _idPropertyName, _uow, GetById_Command);
         }

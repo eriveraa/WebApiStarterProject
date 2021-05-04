@@ -56,7 +56,7 @@ namespace EMT.BLL
             // Establecer las propiedades de la creación de la entidad
             auditableEntity.CreatedBy = userId;
             auditableEntity.UpdatedBy = userId;
-            auditableEntity.IsDeleted = false;
+            //auditableEntity.IsDeleted = false;      // Moved to DbContext
             //auditableEntity.CreatedAt = timeStamp;  // Moved to DbContext
             //auditableEntity.UpdatedAt = timeStamp;  // Moved to DbContext
 
@@ -158,9 +158,13 @@ namespace EMT.BLL
         }
 
         public static async Task<ListResult<TDto>> ServiceGetSearchAndPaginated<TDto>(
-            IDbConnection cn, string GetSearchAndPaginated_Command, object queryParams)
+            IDbConnection cn, string GetSearchAndPaginated_Command, DynamicParameters queryParams,
+            int page = 1, int pageSize = 5)
         {
             var response = new ListResult<TDto>();
+
+            // Adding additional parameters for paging (query should have @pageSize and @offset params)
+            queryParams.AddDynamicParams(new { pageSize, offset = pageSize * (page - 1) });
 
             // Obtener los datos
             var queryMultiple = await cn.QueryMultipleAsync(
@@ -170,7 +174,7 @@ namespace EMT.BLL
             var data = await queryMultiple.ReadAsync<TDto>();
 
             // Datos de retorno (esto llena el response.data)
-            //AppHelpers.SetListResponse<TDto>(response, data, page, pageSize, totalCount);
+            AppHelpers.SetListResponse<TDto>(response, data, page, pageSize, totalCount);
 
             return response;
         }
