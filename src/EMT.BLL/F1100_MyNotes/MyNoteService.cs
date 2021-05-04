@@ -32,61 +32,58 @@ namespace EMT.BLL.Services
         private string GetAll_Command => AppHelpers.QueryGetAll_Command(_tableName, _selectFields, _idPropertyName, _userInnerJoins, _notDeleted);
         //private string GetExists_Command => AppHelpers.QueryGetExists_Command(_tableName, _idPropertyName);
 
-        public async Task<BaseResult<MyNoteDto>> GetById(object id)
+        public async Task<BaseResult<MyNoteDto>> GetById(uint id)
         {
-            var response = new BaseResult<MyNoteDto>();
-            
-            response.Data = await _connection.QuerySingleOrDefaultAsync<MyNoteDto>(GetById_Command, new { id1 = id });
             _logger.LogInformation("*** {Method} {id}", "GetById", id);
-
-            #region Other samples
-            //EF query samples:
-            //var note = await _uow.GetRepository<MyNote>().GetById(id);
-            //var allUsers = (from p in _uow.GetContext.AppUser select p).ToList();
-            #endregion
-
-            return response;
+            return await AppHelpers.ServiceGetByIdHelper<MyNoteDto>(_connection, GetById_Command, id);
         }
 
         public async Task<ListResult<MyNoteDto>> GetAll()
         {
-            var response = new ListResult<MyNoteDto>();
-
-            response.Data = await _connection.QueryAsync<MyNoteDto>(GetAll_Command, null);
             _logger.LogInformation("*** {Method}", "GetAll");
-
-            return response;
+            return await AppHelpers.ServiceGetAllHelper<MyNoteDto>(_connection, GetAll_Command);
         }
 
         public async Task<ListResult<MyNoteDto>> GetSearchAndPaginated(string search = null, int page = 1, int pageSize = 5)
         {
-            var response = new ListResult<MyNoteDto>();
+            _logger.LogInformation("*** {Method}", "GetSearchAndPaginated");
 
             search = $"%{search}%";
             string sqlWHERE = $@"( {_notDeleted} AND ( T0.Title LIKE @search OR T0.NoteBody LIKE @search ) )";
             string sqlPaged = $@"SELECT COUNT(*) FROM {_tableName} T0 WHERE {sqlWHERE};
 
-                                     SELECT {_selectFields} FROM {_tableName} T0 {_userInnerJoins} WHERE {sqlWHERE} 
-                                     ORDER BY T0.UpdatedAt DESC LIMIT @pageSize OFFSET @offset;";
-
-            // Obtener los datos
-            var queryMultiple = await _connection.QueryMultipleAsync(
-                                    sqlPaged,
-                                    new { search, pageSize, offset = pageSize * (page - 1) });
-            var totalCount = await queryMultiple.ReadSingleAsync<long>();
-            var data = await queryMultiple.ReadAsync<MyNoteDto>();
-
-            // Datos de retorno (esto llena el response.data)
-            AppHelpers.SetListResponse<MyNoteDto>(response, data, page, pageSize, totalCount);
-
-            _logger.LogInformation("*** {Method}", "GetSearchAndPaginated");
-
-
-            return response;
+                                SELECT {_selectFields} FROM {_tableName} T0 {_userInnerJoins} WHERE {sqlWHERE} 
+                                ORDER BY T0.UpdatedAt DESC LIMIT @pageSize OFFSET @offset;";
+            
+            return await AppHelpers.ServiceGetSearchAndPaginated<MyNoteDto>(
+                            _connection, sqlPaged,
+                            new { search, pageSize, offset = pageSize * (page - 1) });
         }
 
-
         public async Task<BaseResult<MyNoteDto>> Create(MyNote newEntity)
+        {
+            _logger.LogInformation("*** {Method} {@Entity}", "Create", newEntity);
+            // Agregar verificación de la existencia de la entidad con el Id, solo si el usuario lo provee.
+            return await AppHelpers.ServiceCreateEntityHelper<MyNote, MyNoteDto, uint>(
+                            newEntity, _idPropertyName, _uow, GetById_Command);
+        }
+
+        public async Task<BaseResult<MyNoteDto>> Update(uint id, MyNote updatedEntity)
+        {
+            _logger.LogInformation("*** {Method} {@Entity}", "Update", updatedEntity);
+            return await AppHelpers.ServiceUpdateEntityHelper<MyNote, MyNoteDto, uint>(
+                            updatedEntity, id, _idPropertyName, _uow, GetById_Command);
+        }
+        public async Task<BaseResult<object>> DeleteById(uint id)
+        {
+            _logger.LogInformation("*** {Method} {id}", "DeleteById", id);
+            return await AppHelpers.ServiceDeleteEntityHelper<MyNote>(id, _uow);
+        }
+
+        #region Old Code for reference
+
+        // Use this method when full customization is required.
+        public async Task<BaseResult<MyNoteDto>> Create_OLD(MyNote newEntity)
         {
             var response = new BaseResult<MyNoteDto>();
 
@@ -104,30 +101,14 @@ namespace EMT.BLL.Services
             return response;
         }
 
-        public async Task<BaseResult<MyNoteDto>> Update(object id, MyNote updatedEntity)
+        // Use this method when full customization is required.
+        public async Task<BaseResult<MyNoteDto>> Update_OLD2(uint id, MyNote updatedEntity)
         {
             var response = new BaseResult<MyNoteDto>();
 
-            // Detectar inconsistencia entre el Id y la entidad (deben ser iguales en valores)
-            if ((uint)id != updatedEntity.NoteId) throw new Exception(AppMessages.UPDATE_ID_ERROR);
+            if (!await AppHelpers.ServiceUpdateEntityCheckHelper<MyNote, MyNoteDto, uint>(updatedEntity, response, id, _idPropertyName, _uow)) return response;
 
-            // Obtener la entidad desde la BD para comparar con la recibida
-            var entityFromDb = await _uow.GetRepository<MyNote>().GetById(id);
-
-            // Si la entidad ya está eliminada o no existe, no hacer nada y devolver null
-            if (entityFromDb == null || entityFromDb.IsDeleted)
-            {
-                response.Data = null;
-                return response;
-            }
-
-            // Comparar con la entidad de la BD y detectar un cambio no permitido
-            if (AppHelpers.NotAllowedChanges(entityFromDb, updatedEntity)) throw new Exception(AppMessages.UPDATE_FORBIDDEN_FIELDS);
-
-            // Actualizar propiedades de la entidad
-            AppHelpers.SetFieldsForEntityUpdate(updatedEntity);
-
-            // Guardar la entidad
+            // Guardar la entidad actualizada
             await _uow.GetRepository<MyNote>().Update(updatedEntity);
             await _uow.SaveAsync();
 
@@ -138,35 +119,7 @@ namespace EMT.BLL.Services
             return response;
         }
 
-        public async Task<BaseResult<object>> DeleteById(object id)
-        {
-            var response = new BaseResult<object>();
-
-            // Obtener la entidad desde la BD para actualizarla
-            var entityFromDb = await _uow.GetRepository<MyNote>().GetById(id);
-
-            // Si la entidad ya está eliminada o no existe, no hacer nada y devolver null
-            if (entityFromDb == null || entityFromDb.IsDeleted)
-            {
-                response.Data = null;
-                return response;
-            }
-
-            // Actualizar propiedades de la entidad
-            AppHelpers.SetFieldsForEntityDeletion(entityFromDb);
-
-            // Guardar la entidad
-            await _uow.GetRepository<MyNote>().Update(entityFromDb);
-            await _uow.SaveAsync();
-
-            // Solo devolver el ID de la entidad eliminada lógicamente
-            response.Data = id;
-
-            _logger.LogInformation("*** {Method} {id}", "DeleteById", id);
-            return response;
-        }
-
-        #region Old Code for reference
+        // This method is just for reference (no helpers, no global exception handler). Don´t use it.
         public async Task<BaseResult<MyNoteDto>> Update_OLD(object id, MyNote updatedEntity)
         {
             var response = new BaseResult<MyNoteDto>();
