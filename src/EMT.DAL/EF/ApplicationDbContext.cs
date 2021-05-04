@@ -24,18 +24,27 @@ namespace EMT.DAL.EF
             // This will automatically put the timestamps in any Entity derived from AuditableEntityBase
             var timeStamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var entries = ChangeTracker.Entries().Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            //.Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added  || e.State == EntityState.Modified));
+
             foreach (var entityEntry in entries)
             {
                 if (entityEntry.Entity is AuditableEntityBase auditableEntity)
                 {
+                    // Implementation may change based on the useage scenario, this
+                    // sample is for forma authentication.
+                    //string currentUser = HttpContext.Current.User.Identity.Name;
+                    //var currentUsername = !string.IsNullOrEmpty(System.Web.HttpContext.Current?.User?.Identity?.Name) ? HttpContext.Current.User.Identity.Name : "Anonymous";
+
+                    auditableEntity.UpdatedAt = timeStamp;
                     if (entityEntry.State == EntityState.Modified)
                     {
-                        auditableEntity.UpdatedAt = timeStamp;
+                        // mark property as "don't touch" as we don't want to update on a Modify operation
+                        entityEntry.Property("CreatedAt").IsModified = false;
                     }
                     else if (entityEntry.State == EntityState.Added)
                     {
+                        auditableEntity.IsDeleted = false;
                         auditableEntity.CreatedAt = timeStamp;
-                        auditableEntity.UpdatedAt = timeStamp;
                     }
                 }
                 //if (entityEntry.State == EntityState.Modified)
@@ -49,7 +58,7 @@ namespace EMT.DAL.EF
                 //}
             }
 
-            // For other entities (not derived from AuditableEntityBase, i will work as default)
+            // For other entities (not derived from AuditableEntityBase, it will work as always/default)
             return await base.SaveChangesAsync(cancellationToken);
         }
 
